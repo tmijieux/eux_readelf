@@ -90,6 +90,10 @@ static void eux64_print_memory(struct gengetopt_args_info *info, Elf64_Ehdr *ehd
     if (info->dynamic_given) {
         eux64_dyn_print_all_tags(ehdr, shdr);
     }
+
+    if (info->string_tables_given) {
+        eux64_str_print_all_tables(ehdr, shdr);
+    }
 }
 
 static void eux_print_filename(struct gengetopt_args_info *info, const char *filename)

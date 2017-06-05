@@ -12,5 +12,6 @@ option "dyn-syms" D "Display the dynamic symbol table" optional
 option "notes" n "Display the core notes (if present)" optional
 option "relocs" r "Display the relocations (if present)" optional
 option "dynamic" d "Display the dynamic section (if present)" optional
+option "string-tables" t "Display the string tables" optional
 option "help" H "Print help and exit" optional
 option "version" v "Print version and exit" optional
