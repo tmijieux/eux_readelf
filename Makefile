@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -pedantic -std=c99
+CFLAGS=-Wall -Wextra -std=c99 -O2
 LIBS=
-LDFLAGS=
+LDFLAGS=-O2
 SRC=main.c color.c
 OBJ=$(SRC:.c=.o)
 DEPS=$(wildcard *.dep)
