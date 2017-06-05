@@ -3,7 +3,7 @@ CFLAGS=-Wall -Wextra -std=c99 -O2
 LIBS=
 LDFLAGS=-O2
 GENERATED_SOURCES=eux_readelf_cmdline.c eux_readelf_cmdline.h
-SRC=eux_readelf.c color.c eux_readelf_cmdline.c
+SRC=eux_readelf.c color.c eux_readelf_cmdline.c symtab.c strtab.c
 OBJ=$(SRC:.c=.o)
 DEPS=$(wildcard *.dep)
 TARGETS=eux_readelf

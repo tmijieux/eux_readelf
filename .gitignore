@@ -5,3 +5,6 @@ eux_readelf
 *.dep
 eux_readelf_cmdline.c
 eux_readelf_cmdline.h
+GPATH
+GRTAGS
+GTAGS

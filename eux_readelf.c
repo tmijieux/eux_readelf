@@ -20,6 +20,8 @@
 #include "color.h"
 #include "error.h"
 #include "eux_readelf_cmdline.h"
+#include "symtab.h"
+#include "strtab.h"
 
 #define DOMAIN "eux"
 #define _(X) dgettext(DOMAIN, (X))
@@ -64,7 +66,6 @@ static void eux64_print_header_ident(Elf64_Ehdr *header)
     printf("\n");
     printf(_("ABI VERSION: %hhu\n"), header->e_ident[EI_ABIVERSION]);
 }
-
 
 static void eux64_print_elf_header(Elf64_Ehdr *header)
 {
@@ -118,7 +119,7 @@ static void eux64_print_elf_header(Elf64_Ehdr *header)
 
 }
 
-static void eux64_print_program_header_entry(Elf64_Ehdr *eheader, Elf64_Phdr *entry)
+static void eux64_print_program_header_entry(Elf64_Ehdr *ehdr, Elf64_Phdr *entry)
 {
     switch ( entry->p_type ) {
     case PT_NULL: printf("NULL\n"); break;
@@ -133,25 +134,19 @@ static void eux64_print_program_header_entry(Elf64_Ehdr *eheader, Elf64_Phdr *en
     }
 
     if (entry->p_type == PT_INTERP) {
-        char *interp = (((char*)eheader) + entry->p_offset);
+        char *interp = (((char*)ehdr) + entry->p_offset);
         printf(_("Interpreter is '%s'\n"), interp);
     }
 }
 
-static char *eux64_strtab_get_str(Elf64_Ehdr *eheader, Elf64_Shdr *strtab, uint32_t idx)
-{
-    assert( strtab->sh_type == SHT_STRTAB );
-    return ((char*)eheader) + strtab->sh_offset + idx;
-}
-
 static void eux64_print_section_header_entry(
-    Elf64_Ehdr *eheader, Elf64_Shdr *entry, Elf64_Shdr *shname_strtab)
+    Elf64_Ehdr *ehdr, Elf64_Shdr *entry, Elf64_Shdr *shname_strtab)
 {
-    char *section_name = eux64_strtab_get_str(eheader, shname_strtab, entry->sh_name);
+    char *section_name = eux64_strtab_get_str(ehdr, shname_strtab, entry->sh_name);
 
     printf("%s \t\t(", section_name);
     switch ( entry->sh_type ) {
-    case SHT_NULL:     printf("NULL");                break;
+    case SHT_NULL:     printf("NULL");                   break;
     case SHT_PROGBITS: printf(_("Prog bits"));           break;
     case SHT_SYMTAB:   printf(_("Symbol table"));        break;
     case SHT_STRTAB:   printf(_("String table"));        break;
@@ -169,12 +164,12 @@ static void eux64_print_section_header_entry(
 
     if ( entry->sh_type == SHT_PROGBITS
          && !strcmp(".interp", section_name)) {
-        char *interp = (((char*)eheader)+entry->sh_offset);
+        char *interp = (((char*)ehdr)+entry->sh_offset);
         printf(_("interpreter is '%s'\n"), interp);
     }
 }
 
-static void eux64_print_program_header(Elf64_Ehdr *eheader, Elf64_Phdr *pheader,
+static void eux64_print_program_header(Elf64_Ehdr *ehdr, Elf64_Phdr *phdr,
                                        uint16_t phnum, uint16_t phentsize)
 {
     Elf64_Phdr *entry;
@@ -182,57 +177,82 @@ static void eux64_print_program_header(Elf64_Ehdr *eheader, Elf64_Phdr *pheader,
 
     printf("\n");
     for (uint16_t i = 0; i < phnum; ++i) {
-        entry = &pheader[i];
+        entry = &phdr[i];
         printf("#%hu: ", i);
-        eux64_print_program_header_entry(eheader, entry);
+        eux64_print_program_header_entry(ehdr, entry);
     }
     printf("\n");
 }
 
-static void eux64_print_section_header(Elf64_Ehdr *eheader, Elf64_Shdr *sheader,
+static void eux64_print_section_header(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr,
                                        uint16_t shnum, uint16_t shentsize)
 {
     Elf64_Shdr *entry;
     assert( shentsize == sizeof(*entry) );
-    Elf64_Shdr *shname_strtab = sheader+eheader->e_shstrndx;
+    Elf64_Shdr *shname_strtab = shdr+ehdr->e_shstrndx;
     if ( shnum == 0 ) {
-        shnum = sheader->sh_size;
-        assert( sheader->sh_type == SHT_NULL );
+        shnum = shdr->sh_size;
+        assert( shdr->sh_type == SHT_NULL );
         assert( shnum >= SHN_LORESERVE );
     }
 
     printf("\n");
     for (uint16_t i = 0; i < shnum; ++i) {
-        entry = &sheader[i];
+        entry = &shdr[i];
         printf("#%hu: ", i);
-        eux64_print_section_header_entry(eheader, entry, shname_strtab);
+        eux64_print_section_header_entry(ehdr, entry, shname_strtab);
     }
     printf("\n");
 }
 
-static void eux_print_64(struct gengetopt_args_info *info, Elf64_Ehdr *header)
+static void eux64_print_memory(struct gengetopt_args_info *info, Elf64_Ehdr *ehdr)
 {
     if (info->file_header_given) {
-        eux64_print_elf_header(header);
+        eux64_print_elf_header(ehdr);
     }
 
     if (info->program_headers_given) {
-        if ( header->e_phoff != 0 ) {
-            eux64_print_program_header(header, (Elf64_Phdr*) (((uint8_t*)header) + header->e_phoff),
-                                       header->e_phnum, header->e_phentsize);
+        if ( ehdr->e_phoff != 0 ) {
+            Elf64_Phdr *program_hdr = (Elf64_Phdr*) (((uint8_t*)ehdr) + ehdr->e_phoff);
+            eux64_print_program_header(ehdr, program_hdr,
+                                       ehdr->e_phnum, ehdr->e_phentsize);
         } else {
             fprintf(stderr, _("No program header in this file.\n"));
         }
     }
 
     if (info->section_headers_given) {
-        if (header->e_shoff != 0) {
-            eux64_print_section_header(header, (Elf64_Shdr*) (((uint8_t*)header) + header->e_shoff),
-                                       header->e_shnum, header->e_shentsize);
+        if (ehdr->e_shoff != 0) {
+            Elf64_Shdr *section_hdr = (Elf64_Shdr*) (((uint8_t*)ehdr) + ehdr->e_shoff);
+            eux64_print_section_header(ehdr, section_hdr,
+                                       ehdr->e_shnum, ehdr->e_shentsize);
         } else {
             fprintf(stderr, _("No section header in this file.\n"));
         }
     }
+
+    if (info->symbols_given) {
+        Elf64_Shdr *shdr = (Elf64_Shdr*) (((uint8_t*)ehdr) + ehdr->e_shoff);
+        Elf64_Shdr *symtab_hdr = eux64_get_symtab_hdr(ehdr, shdr);
+        Elf64_Shdr *sym_strtab_hdr = eux64_get_strtab_hdr(ehdr, shdr);
+        if ( symtab_hdr != NULL ) {
+            eux64_symtab_print(ehdr, symtab_hdr, sym_strtab_hdr);
+        } else {
+            fprintf(stderr, _("No symbol table in this file.\n"));
+        }
+    }
+
+    if (info->dyn_syms_given) {
+        Elf64_Shdr *shdr = (Elf64_Shdr*) (((uint8_t*)ehdr) + ehdr->e_shoff);
+        Elf64_Shdr *dynsym_hdr = eux64_get_dynsym_hdr(ehdr, shdr);
+        Elf64_Shdr *dynstr_hdr = eux64_get_dynstr_hdr(ehdr, shdr);
+        if ( dynsym_hdr != NULL ) {
+            eux64_symtab_print(ehdr, dynsym_hdr, dynstr_hdr);
+        } else {
+            fprintf(stderr, _("No dynamic symbol table in this file.\n"));
+        }
+    }
+
 }
 
 static void eux_print_filename(struct gengetopt_args_info *info, const char *filename)
@@ -245,7 +265,7 @@ static void eux_print_filename(struct gengetopt_args_info *info, const char *fil
         return;
     }
     if (st.st_size < (long)sizeof(Elf32_Ehdr)) {
-        eux_fatal_error(_("Invalid file format: '%s' have not the elf file format\n"), filename);
+        eux_fatal_error(_("Invalid file format: '%s' have not the ELF file format\n"), filename);
     }
 
     int fd = open(filename, 0);
@@ -258,13 +278,14 @@ static void eux_print_filename(struct gengetopt_args_info *info, const char *fil
     if (addr == MAP_FAILED) {
         eux_fatal_error(_("Cannot mmap '%s': %s\n"), filename, strerror(errno));
     }
+    close(fd);
 
     uint8_t *ptr = addr;
     if (  ptr[EI_MAG0] != ELFMAG0
           || ptr[EI_MAG1] != ELFMAG1
           || ptr[EI_MAG2] != ELFMAG2
           || ptr[EI_MAG3] != ELFMAG3 ) {
-        eux_fatal_error(_("Invalid file format: '%s' have not the elf file format\n"), filename);
+        eux_fatal_error(_("Invalid file format: '%s' (Invalid ELF magic bytes)\n"), filename);
     }
 
     if ( ptr[EI_CLASS] == ELFCLASS32 ) {
@@ -272,14 +293,13 @@ static void eux_print_filename(struct gengetopt_args_info *info, const char *fil
         return;
     } else if ( ptr[EI_CLASS] == ELFCLASS64 ) {
         printf("Elf 64bit!\n");
-        eux_print_64(info, addr);
+        eux64_print_memory(info, addr);
     } else {
         eux_error("Elf NOCLASS not handled!\n");
         return;
     }
 
     err = munmap(addr, st.st_size);
-    close(fd);
     if (err != 0) {
         eux_fatal_error(_("Cannot munmap '%s': %s\n"), filename, strerror(errno));
     }
