@@ -5,6 +5,7 @@
 
 void eux64_elf_print_header_ident(Elf64_Ehdr *ehdr)
 {
+    printf("Format:                                 ");
     if ( ehdr->e_ident[EI_DATA] == ELFDATA2LSB ) {
         printf(_("Little Endian\n"));
     } else if ( ehdr->e_ident[EI_DATA] == ELFDATA2MSB ) {
@@ -13,13 +14,14 @@ void eux64_elf_print_header_ident(Elf64_Ehdr *ehdr)
         eux_fatal_error(_("Unknown data format\n"));
     }
 
+    printf("VERSION:                                ");
     if ( ehdr->e_ident[EI_VERSION] == EV_NONE ) {
         eux_fatal_error(_("Invalid version\n"));
     } else if ( ehdr->e_ident[EI_DATA] == EV_CURRENT ) {
         printf(_("Current version\n"));
     }
 
-    printf("ABI: ");
+    printf("ABI:                                    ");
     switch ( ehdr->e_ident[EI_OSABI] ) {
     case ELFOSABI_SYSV:       printf("SYSV");       break;
     case ELFOSABI_HPUX:       printf("HPUX");       break;
@@ -33,14 +35,14 @@ void eux64_elf_print_header_ident(Elf64_Ehdr *ehdr)
     case ELFOSABI_STANDALONE: printf("STANDALONE"); break;
     }
     printf("\n");
-    printf(_("ABI VERSION: %hhu\n"), ehdr->e_ident[EI_ABIVERSION]);
+    printf(_("ABI VERSION:                            %hhu\n"), ehdr->e_ident[EI_ABIVERSION]);
 }
 
 void eux64_elf_print_header(Elf64_Ehdr *ehdr)
 {
     eux64_elf_print_header_ident(ehdr);
 
-    printf(_("Object type: "));
+    printf(_("Object type:                            "));
     switch( ehdr->e_type ) {
     default: /* fall-thru */
     case ET_NONE: printf(_("Unknown"));     break;
@@ -51,7 +53,7 @@ void eux64_elf_print_header(Elf64_Ehdr *ehdr)
     }
     printf("\n");
 
-    printf(_("Machine type: "));
+    printf(_("Machine type:                           "));
     switch ( ehdr->e_machine ) {
     default: /* fall-thru */
     case EM_NONE       :  printf(_("An unknown machine"));           break;
@@ -76,13 +78,14 @@ void eux64_elf_print_header(Elf64_Ehdr *ehdr)
     }
     printf("\n");
 
-    printf(_("Entry point: %p\n"), (void*)ehdr->e_entry);
-    printf(_("Program header offset: %lu\n"), ehdr->e_phoff);
-    printf(_("Elf header size: %hu\n"), ehdr->e_ehsize);
-    printf(_("Section header offset: %lu\n"), ehdr->e_shoff);
-    printf(_("Program header entry size: %hu\n"), ehdr->e_phentsize);
-    printf(_("Program header entry count: %hu\n"), ehdr->e_phnum);
-    printf(_("Section header entry size: %hu\n"), ehdr->e_shentsize);
-    printf(_("Section header entry count: %hu\n"), ehdr->e_shnum);
+    printf(_("Entry point:                            %p\n"), (void*)ehdr->e_entry);
+    printf(_("Program header offset:                  %lu\n"), ehdr->e_phoff);
+    printf(_("Elf header size:                        %hu\n"), ehdr->e_ehsize);
+    printf(_("Section header offset:                  %lu\n"), ehdr->e_shoff);
+    printf(_("Program header entry size:              %hu\n"), ehdr->e_phentsize);
+    printf(_("Program header entry count:             %hu\n"), ehdr->e_phnum);
+    printf(_("Section header entry size:              %hu\n"), ehdr->e_shentsize);
+    printf(_("Section header entry count:             %hu\n"), ehdr->e_shnum);
     printf(_("Section header name string table index: %hu\n"), ehdr->e_shstrndx);
+    printf("\n");
 }

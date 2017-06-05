@@ -106,7 +106,8 @@ static void eux_print_filename(struct eux_args_info *info, const char *filename)
         return;
     }
     if (st.st_size < (long)sizeof(Elf32_Ehdr)) {
-        eux_fatal_error(_("Invalid file format: '%s' have not the ELF file format\n"), filename);
+        eux_error(_("Invalid file format: '%s' have not the ELF file format\n"), filename);
+        return;
     }
 
     int fd = open(filename, 0);
@@ -126,7 +127,8 @@ static void eux_print_filename(struct eux_args_info *info, const char *filename)
           || ptr[EI_MAG1] != ELFMAG1
           || ptr[EI_MAG2] != ELFMAG2
           || ptr[EI_MAG3] != ELFMAG3 ) {
-        eux_fatal_error(_("Invalid file format: '%s' (Invalid ELF magic bytes)\n"), filename);
+        eux_error(_("Invalid file format: '%s' (Invalid ELF magic bytes)\n"), filename);
+        return;
     }
 
     if ( ptr[EI_CLASS] == ELFCLASS32 ) {

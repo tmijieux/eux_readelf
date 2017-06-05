@@ -31,7 +31,7 @@ void eux64_section_print_header_entry(
 {
     const char *section_name = eux64_strtab_get_str(ehdr, shname_strtab, entry->sh_name);
 
-    printf("%s \t\t(", section_name);
+    printf("%-20s (", section_name);
     switch ( entry->sh_type ) {
     case SHT_NULL:     printf("NULL");                   break;
     case SHT_PROGBITS: printf(_("Prog bits"));           break;
@@ -47,13 +47,15 @@ void eux64_section_print_header_entry(
     case SHT_DYNSYM:   printf(_("Dynamic symbols"));     break;
     default:           printf(_("Other"));               break;
     }
-    printf(")\n");
+    printf(")");
 
     if ( entry->sh_type == SHT_PROGBITS
          && !strcmp(".interp", section_name)) {
         char *interp = (((char*)ehdr)+entry->sh_offset);
-        printf(_("interpreter is '%s'\n"), interp);
+        printf("  '%s'", interp);
     }
+    printf("\n");
+
 }
 
 void eux64_section_print_header(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr,
@@ -68,10 +70,9 @@ void eux64_section_print_header(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr,
         assert( shnum >= SHN_LORESERVE );
     }
 
-    printf("\n");
+    printf(_("Section headers table:\n"));
     for (uint16_t i = 0; i < shnum; ++i) {
         entry = &shdr[i];
-        printf("#%hu: ", i);
         eux64_section_print_header_entry(ehdr, entry, shname_strtab);
     }
     printf("\n");
