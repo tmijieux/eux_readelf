@@ -27,6 +27,7 @@
 #include "i18n.h"
 #include "elf.h"
 #include "reloc.h"
+#include "dyn.h"
 
 static void eux_init_locale_settings()
 {
@@ -85,6 +86,10 @@ static void eux64_print_memory(struct gengetopt_args_info *info, Elf64_Ehdr *ehd
     if (info->relocs_given) {
         eux64_reloc_print_all_relocations(ehdr, shdr);
     }
+
+    if (info->dynamic_given) {
+        eux64_dyn_print_all_tags(ehdr, shdr);
+    }
 }
 
 static void eux_print_filename(struct gengetopt_args_info *info, const char *filename)
@@ -124,7 +129,7 @@ static void eux_print_filename(struct gengetopt_args_info *info, const char *fil
         eux_error(_("Elf 32bit not handled!\n"));
         return;
     } else if ( ptr[EI_CLASS] == ELFCLASS64 ) {
-        printf("Elf 64bit!\n");
+        // printf("Elf 64bit!\n");
         eux64_print_memory(info, addr);
     } else {
         eux_error(_("Elf NOCLASS not handled!\n"));

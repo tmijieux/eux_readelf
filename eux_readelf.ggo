@@ -1,6 +1,6 @@
 version "0.1"
 package "eux_readelf"
-purpose "print information content of elf files"
+purpose "print informations about content of elf files"
 
 option "all" a "equivalent to -h -l -S -s -r -d -V -A -I" optional
 option "file-header" h "Display the ELF file header" optional

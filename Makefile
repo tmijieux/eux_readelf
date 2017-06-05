@@ -11,7 +11,8 @@ SRC=	eux_readelf.c \
 	section.c \
 	program.c \
 	elf.c \
-	reloc.c
+	reloc.c \
+	dyn.c
 
 OBJ=$(SRC:.c=.o)
 DEPS=$(wildcard *.dep)
@@ -23,7 +24,7 @@ all: $(TARGETS)
 -include $(DEPS)
 
 %.o: %.c
-	@$(CC) -MM $(CFLAGS) -c -o $@.dep $<
+	@$(CC) -MM $(CFLAGS) -c -o $*.dep $<
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 eux_readelf.o: eux_readelf_cmdline.h
