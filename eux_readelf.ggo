@@ -1,0 +1,16 @@
+version "0.1"
+package "eux_readelf"
+purpose "print information content of elf files"
+
+option "all" a "equivalent to -h -l -S -s -r -d -V -A -I" optional
+option "file-header" h "Display the ELF file header" optional
+option "program-headers" l "Display the program headers" optional
+option "section-headers" S "Display the section headers" optional
+option "headers" e "Equivalent to -h -l -S" optional
+option "symbols" s "Display the symbol table" optional
+option "dyn-syms" D "Display the dynamic symbol table" optional
+option "notes" n "Display the core notes (if present)" optional
+option "relocs" r "Display the relocations (if present)" optional
+option "dynamic" d "Display the dynamic section (if present)" optional
+option "help" H "Print help and exit" optional
+option "version" v "Print version and exit" optional

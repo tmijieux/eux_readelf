@@ -2,11 +2,14 @@ CC=gcc
 CFLAGS=-Wall -Wextra -std=c99 -O2
 LIBS=
 LDFLAGS=-O2
-SRC=main.c color.c
+GENERATED_SOURCES=eux_readelf_cmdline.c eux_readelf_cmdline.h
+SRC=eux_readelf.c color.c eux_readelf_cmdline.c
 OBJ=$(SRC:.c=.o)
 DEPS=$(wildcard *.dep)
+TARGETS=eux_readelf
+GENGETOPT=gengetopt
 
-all: test
+all: $(TARGETS)
 
 -include $(DEPS)
 
@@ -14,11 +17,16 @@ all: test
 	@$(CC) -MM $(CFLAGS) -c -o $@.dep $<
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-test:  $(OBJ)
+eux_readelf.o: eux_readelf_cmdline.h
+
+eux_readelf_cmdline.c eux_readelf_cmdline.h: eux_readelf.ggo
+	$(GENGETOPT) -u --no-help --no-version -F eux_readelf_cmdline < $<
+
+eux_readelf:  $(OBJ)
 	$(CC) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 clean:
 	$(RM) $(OBJ)
 
 fullclean: clean
-	$(RM) test $(DEPS)
+	$(RM) $(TARGETS) $(DEPS) $(GENERATED_SOURCES)

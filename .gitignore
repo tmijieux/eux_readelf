@@ -1,5 +1,7 @@
-test
+eux_readelf
 *.o
 *.a
 *.so
 *.dep
+eux_readelf_cmdline.c
+eux_readelf_cmdline.h
