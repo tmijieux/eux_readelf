@@ -1,4 +1,5 @@
 eux_readelf
+a.out
 *.o
 *.a
 *.so

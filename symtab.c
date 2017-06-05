@@ -4,29 +4,19 @@
 
 #include "symtab.h"
 #include "strtab.h"
-
+#include "i18n.h"
+#include "section.h"
 
 /**
  * \brief get the symbol table header
  * \param ehdr pointer to the elf header
  * \param ehdr pointer to the section header table
  */
-Elf64_Shdr *eux64_get_symtab_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
+Elf64_Shdr *eux64_sym_get_symtab_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
 {
-    uint16_t shnum = ehdr->e_shnum;
-    if ( shnum == 0 ) {
-        shnum = shdr->sh_size;
-        assert( shdr->sh_type == SHT_NULL );
-        assert( shnum >= SHN_LORESERVE );
-    }
-
-    for (unsigned i = 0; i < shnum; ++i) {
-        Elf64_Shdr *entry = shdr+i;
-        if (entry->sh_type == SHT_SYMTAB) {
-            return entry;
-        }
-    }
-    return NULL;
+    Elf64_Shdr *symtab = eux64_section_lookup_by_name(ehdr, shdr, ".symtab");
+    assert( symtab->sh_type == SHT_SYMTAB );
+    return symtab;
 }
 
 /**
@@ -34,45 +24,51 @@ Elf64_Shdr *eux64_get_symtab_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
  * \param ehdr pointer to the elf header
  * \param ehdr pointer to the section header table
  */
-Elf64_Shdr *eux64_get_dynsym_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
+Elf64_Shdr *eux64_sym_get_dynsym_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
 {
-    uint16_t shnum = ehdr->e_shnum;
-    if ( shnum == 0 ) {
-        shnum = shdr->sh_size;
-        assert( shdr->sh_type == SHT_NULL );
-        assert( shnum >= SHN_LORESERVE );
-    }
-
-    for (unsigned i = 0; i < shnum; ++i) {
-        Elf64_Shdr *entry = shdr+i;
-        if (entry->sh_type == SHT_DYNSYM) {
-            return entry;
-        }
-    }
-    return NULL;
+    Elf64_Shdr *dynsym = eux64_section_lookup_by_name(ehdr, shdr, ".dynsym");
+    assert( dynsym->sh_type == SHT_DYNSYM );
+    return dynsym;
 }
-
 
 /**
  * \brief get the header of the string table associated with the (static) symbol table
  *
  * \param ehdr pointer to elf header
  * \param shdr pointer to section header table
-  */
-Elf64_Shdr *eux64_get_strtab_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
+ */
+Elf64_Shdr *eux64_sym_get_strtab_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
 {
-    return eux64_lookup_strtab_hdr(ehdr, shdr, ".strtab");
+    Elf64_Shdr *strtab = eux64_section_lookup_by_name(ehdr, shdr, ".strtab");
+    assert( strtab->sh_type == SHT_STRTAB );
+    return strtab;
 }
 
 /**
-* \brief get the header of the string table associated with the (dynamic) symbol table
-*
-* \param ehdr pointer to elf header
-* \param shdr pointer to section header table
-*/
-Elf64_Shdr *eux64_get_dynstr_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
+ * \brief get the header of the string table associated with the (dynamic) symbol table
+ *
+ * \param ehdr pointer to elf header
+ * \param shdr pointer to section header table
+ */
+Elf64_Shdr *eux64_sym_get_dynstr_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
 {
-    return eux64_lookup_strtab_hdr(ehdr, shdr, ".dynstr");
+    Elf64_Shdr *dynstr = eux64_section_lookup_by_name(ehdr, shdr, ".dynstr");
+    assert( dynstr->sh_type == SHT_STRTAB );
+    return dynstr;
+}
+
+
+static void eux64_sym_print_symbol(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr,
+                                   Elf64_Shdr *sym_strtab_hdr, Elf64_Sym *sym)
+{
+    (void) shdr;
+
+    const char *name = eux64_strtab_get_str(ehdr, sym_strtab_hdr, sym->st_name);
+    printf("%016lx %016lx %08x %08x %s\n",
+           sym->st_value, sym->st_size,
+           ELF64_ST_BIND(sym->st_info),
+           ELF64_ST_TYPE(sym->st_info),
+           name  );
 }
 
 /**
@@ -86,16 +82,18 @@ Elf64_Shdr *eux64_get_dynstr_hdr(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr)
  * \param sym_strtab_hdr pointer to section header table entry describing the string table
  * associated with the symbol table
  */
-void eux64_symtab_print(Elf64_Ehdr *ehdr, Elf64_Shdr *symtab_hdr, Elf64_Shdr *sym_strtab_hdr)
+void eux64_sym_print_symtab(Elf64_Ehdr *ehdr, Elf64_Shdr *shdr,
+                            Elf64_Shdr *symtab_hdr, Elf64_Shdr *sym_strtab_hdr)
 {
     Elf64_Sym *symtab = (Elf64_Sym*) (((uint8_t*)ehdr)+symtab_hdr->sh_offset);
     uint16_t symnum = symtab_hdr->sh_size / symtab_hdr->sh_entsize;
-    printf("symnum = %hu\n", symnum);
+    printf(_("Section '%s': %hu Entries\n"),
+           eux64_section_get_name(ehdr, shdr, symtab_hdr), symnum);
 
+    printf("%-16s %-16s %-8s %-8s %s\n",
+           "Value", "Size", "Binding", "Type", "Name");
     for (uint16_t i = 0; i < symnum; ++i) {
         Elf64_Sym *sym = symtab + i;
-        if (sym->st_name == 0) // no name
-            continue;
-        printf("NAME = %s\n", eux64_strtab_get_str(ehdr, sym_strtab_hdr, sym->st_name));
+        eux64_sym_print_symbol(ehdr, shdr, sym_strtab_hdr, sym);
     }
 }

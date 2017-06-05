@@ -1,9 +1,18 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -std=c99 -O2
+CFLAGS=-Wall -Wextra -std=c99 -O2 -fPIE -march=native -mtune=native -pipe -fstack-protector-strong
 LIBS=
-LDFLAGS=-O2
+LDFLAGS=-O2 -fPIE -pie
 GENERATED_SOURCES=eux_readelf_cmdline.c eux_readelf_cmdline.h
-SRC=eux_readelf.c color.c eux_readelf_cmdline.c symtab.c strtab.c
+SRC=	eux_readelf.c \
+	color.c \
+	eux_readelf_cmdline.c \
+	symtab.c \
+	strtab.c \
+	section.c \
+	program.c \
+	elf.c \
+	reloc.c
+
 OBJ=$(SRC:.c=.o)
 DEPS=$(wildcard *.dep)
 TARGETS=eux_readelf
