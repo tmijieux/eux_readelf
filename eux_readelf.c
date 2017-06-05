@@ -37,7 +37,7 @@ static void eux_init_locale_settings()
     bind_textdomain_codeset(DOMAIN, "UTF-8");
 }
 
-static void eux64_print_memory(struct gengetopt_args_info *info, Elf64_Ehdr *ehdr)
+static void eux64_print_memory(struct eux_args_info *info, Elf64_Ehdr *ehdr)
 {
     if (info->file_header_given) {
         eux64_elf_print_header(ehdr);
@@ -96,7 +96,7 @@ static void eux64_print_memory(struct gengetopt_args_info *info, Elf64_Ehdr *ehd
     }
 }
 
-static void eux_print_filename(struct gengetopt_args_info *info, const char *filename)
+static void eux_print_filename(struct eux_args_info *info, const char *filename)
 {
     int err;
     struct stat st;
@@ -146,7 +146,7 @@ static void eux_print_filename(struct gengetopt_args_info *info, const char *fil
     }
 }
 
-static void update_args_info(struct gengetopt_args_info *info)
+static void update_args_info(struct eux_args_info *info)
 {
     if (info->all_given) {
         info->headers_given = 1;
@@ -166,15 +166,15 @@ int main(int argc, char *argv[])
 {
     eux_init_locale_settings();
 
-    struct gengetopt_args_info info;
-    cmdline_parser(argc, argv, &info);
+    struct eux_args_info info;
+    eux_cmdline_parser(argc, argv, &info);
     update_args_info(&info);
 
     if (info.help_given || info.inputs_num == 0) {
-        cmdline_parser_print_help();
+        eux_cmdline_parser_print_help();
         exit(EXIT_FAILURE);
     } else if (info.version_given) {
-        cmdline_parser_print_version();
+        eux_cmdline_parser_print_version();
         exit(EXIT_SUCCESS);
     }
     for (unsigned i = 0; i < info.inputs_num; ++i) {

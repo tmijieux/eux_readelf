@@ -30,7 +30,7 @@ all: $(TARGETS)
 eux_readelf.o: eux_readelf_cmdline.h
 
 eux_readelf_cmdline.c eux_readelf_cmdline.h: eux_readelf.ggo
-	$(GENGETOPT) -u --no-help --no-version -F eux_readelf_cmdline < $<
+	$(GENGETOPT) -u --no-help --no-version -F eux_readelf_cmdline -f eux_cmdline_parser -a eux_args_info < $<
 
 eux_readelf:  $(OBJ)
 	$(CC) $^ -o $@ $(LDFLAGS) $(LIBS)
