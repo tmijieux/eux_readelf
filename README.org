@@ -1,0 +1,30 @@
+#+TITLE: eux_readelf
+#+AUTHOR: Thomas Mijieux
+
+* Description
+  Very basic clone of readelf utility.
+
+* Details
+  This program does not aim for correctness.
+  Be aware that this program was written without learning about the elf norm
+  anymore than just barely reading =man elf= and =elf.h=
+    
+* Compile and Run
+  Compilation depends on gengetopt to generate 
+  the source code which handle command line options.
+  #+begin_src shell
+  make
+  #+end_src
+  
+  Running the program has no library dependency except for libc.
+  (Test have been made with latest GNU libc installed by ArchLinux package releases)
+
+  Display help:
+  #+begin_src 
+  ./eux_readelf -H
+  #+end_src
+
+  Run eux_readelf on itself:
+  #+begin_src 
+  ./eux_readelf -a ./eux_readelf
+  #+end_src
